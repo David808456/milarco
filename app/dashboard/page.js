@@ -8,7 +8,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [matches, setMatches] = useState([]);
 
-  // Form State for Hosting a Match
+  // Host Match State
   const [showHostForm, setShowHostForm] = useState(false);
   const [hostGame, setHostGame] = useState('Free Fire');
   const [matchTitle, setMatchTitle] = useState('');
@@ -26,11 +26,28 @@ export default function DashboardPage() {
     const savedUser = JSON.parse(localStorage.getItem('user'));
     if (savedUser) {
       setUser(savedUser);
+
+      // Check if user is Admin
+      const checkAdmin = 
+        savedUser.username?.toLowerCase() === 'admin' || 
+        savedUser.mobile === '9999999999' || 
+        savedUser.password === '00000000';
+
       const balances = JSON.parse(localStorage.getItem('userBalances')) || {};
-      setBalance(balances[savedUser.mobile] || 0);
+
+      if (checkAdmin) {
+        // Admin gets 999,999,999 coins by default if not set
+        if (balances[savedUser.mobile] === undefined) {
+          balances[savedUser.mobile] = 999999999;
+          localStorage.setItem('userBalances', JSON.stringify(balances));
+        }
+        setBalance(balances[savedUser.mobile]);
+      } else {
+        // Regular users start at 0
+        setBalance(balances[savedUser.mobile] || 0);
+      }
     }
 
-    // Load matches hosted by users
     const savedMatches = JSON.parse(localStorage.getItem('milarcoMatches')) || [];
     setMatches(savedMatches);
   }, []);
@@ -42,9 +59,9 @@ export default function DashboardPage() {
       return;
     }
 
-    const hostCost = 50; // Cost to create a hosted room
+    const hostCost = 50;
     if (balance < hostCost) {
-      alert(`Insufficient balance! Hosting a match costs NPR ${hostCost}. Please ask Admin to add coins to your account.`);
+      alert(`Insufficient balance! Hosting costs NPR ${hostCost}. Ask Admin to send coins to your mobile number.`);
       return;
     }
 
@@ -67,7 +84,6 @@ export default function DashboardPage() {
     setMatches(updatedMatches);
     localStorage.setItem('milarcoMatches', JSON.stringify(updatedMatches));
 
-    // Deduct hosting fee from balance
     const updatedBalance = balance - hostCost;
     setBalance(updatedBalance);
     const balances = JSON.parse(localStorage.getItem('userBalances')) || {};
@@ -85,12 +101,12 @@ export default function DashboardPage() {
 
   const handleJoin = (match) => {
     if (balance < match.entryFee) {
-      alert('Insufficient wallet balance! Contact Admin to add coins.');
+      alert('Insufficient wallet balance! Ask Admin to send coins to your mobile number.');
       return;
     }
 
     if (match.joined >= match.totalSeats) {
-      alert('This match is already full!');
+      alert('This match is full!');
       return;
     }
 
@@ -108,25 +124,39 @@ export default function DashboardPage() {
     alert(`Successfully joined ${match.title}!`);
   };
 
-  const handleAddCoinsByAdmin = (e) => {
+  // Transfer coins from Admin to user by mobile number
+  const handleSendCoinsByAdmin = (e) => {
     e.preventDefault();
     if (!targetMobile || !coinsToAdd) {
-      alert('Please enter both mobile number and coin amount.');
+      alert('Please enter a target mobile number and amount of coins.');
       return;
     }
 
     const amount = parseInt(coinsToAdd, 10);
-    const balances = JSON.parse(localStorage.getItem('userBalances')) || {};
-    const currentTargetBal = balances[targetMobile] || 0;
-    
-    balances[targetMobile] = currentTargetBal + amount;
-    localStorage.setItem('userBalances', JSON.stringify(balances));
-
-    if (user && user.mobile === targetMobile) {
-      setBalance(balances[targetMobile]);
+    if (isNaN(amount) || amount <= 0) {
+      alert('Enter a valid coin amount.');
+      return;
     }
 
-    alert(`Added NPR ${amount} to account (${targetMobile})!`);
+    if (balance < amount) {
+      alert('Admin does not have enough coins to complete this transfer.');
+      return;
+    }
+
+    const balances = JSON.parse(localStorage.getItem('userBalances')) || {};
+    
+    // Deduct from Admin
+    const updatedAdminBalance = balance - amount;
+    balances[user.mobile] = updatedAdminBalance;
+    setBalance(updatedAdminBalance);
+
+    // Add to recipient's mobile number balance
+    const currentTargetBal = balances[targetMobile] || 0;
+    balances[targetMobile] = currentTargetBal + amount;
+
+    localStorage.setItem('userBalances', JSON.stringify(balances));
+
+    alert(`Successfully sent NPR ${amount} coins to Mobile No: ${targetMobile}!`);
     setTargetMobile('');
     setCoinsToAdd('');
   };
@@ -148,27 +178,31 @@ export default function DashboardPage() {
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1000px', margin: '0 auto 2rem auto', background: '#16161e', padding: '1rem 1.5rem', borderRadius: '12px', border: '1px solid #232330' }}>
         <div>
           <h2 style={{ color: '#00ff88', margin: 0, fontWeight: '800', fontSize: '1.6rem', letterSpacing: '1px' }}>MiLarco</h2>
-          <span style={{ fontSize: '0.8rem', color: '#8a8a9e' }}>Player: {user ? user.username : 'Gamer'}</span>
+          <span style={{ fontSize: '0.8rem', color: '#8a8a9e' }}>
+            Player: {user ? user.username : 'Gamer'} {isAdmin && '👑 (Admin)'}
+          </span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={{ background: '#0d0d11', border: '1px solid #232330', padding: '0.5rem 1rem', borderRadius: '8px', textAlign: 'right' }}>
             <span style={{ fontSize: '0.75rem', color: '#8a8a9e', display: 'block' }}>Wallet Balance</span>
-            <strong style={{ color: '#00ff88', fontSize: '1.1rem' }}>NPR {balance}</strong>
+            <strong style={{ color: '#00ff88', fontSize: '1.1rem' }}>NPR {balance.toLocaleString()}</strong>
           </div>
         </div>
       </nav>
 
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         
-        {/* Admin Coin Panel */}
+        {/* Admin Coin Sender */}
         {isAdmin && (
           <div style={{ background: '#1e1b18', border: '1px solid #ff9900', borderRadius: '12px', padding: '1.25rem', marginBottom: '2rem' }}>
-            <h3 style={{ color: '#ff9900', margin: '0 0 0.75rem 0', fontSize: '1.1rem' }}>👑 Admin Coin Dispenser</h3>
-            <form onSubmit={handleAddCoinsByAdmin} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <h3 style={{ color: '#ff9900', margin: '0 0 0.25rem 0', fontSize: '1.1rem' }}>👑 Admin Coin Dispenser</h3>
+            <p style={{ color: '#8a8a9e', fontSize: '0.8rem', margin: '0 0 1rem 0' }}>Send coins directly to users using their 10-digit mobile number.</p>
+            
+            <form onSubmit={handleSendCoinsByAdmin} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <input
                 type="tel"
-                placeholder="User Mobile No (10 digits)"
+                placeholder="User Mobile No (e.g. 9812345678)"
                 value={targetMobile}
                 onChange={(e) => setTargetMobile(e.target.value)}
                 style={{ flex: 1, padding: '0.6rem', borderRadius: '6px', border: '1px solid #333', background: '#0d0d11', color: '#fff' }}
@@ -181,7 +215,7 @@ export default function DashboardPage() {
                 style={{ width: '130px', padding: '0.6rem', borderRadius: '6px', border: '1px solid #333', background: '#0d0d11', color: '#fff' }}
               />
               <button type="submit" style={{ background: '#ff9900', color: '#000', border: 'none', padding: '0.6rem 1.25rem', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
-                Add Coins
+                Send Coins
               </button>
             </form>
           </div>
@@ -281,11 +315,11 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Live Active Matches */}
+        {/* Matches Grid */}
         {filteredMatches.length === 0 ? (
-          <div style={{ textAlignment: 'center', background: '#16161e', padding: '3rem 1rem', borderRadius: '12px', border: '1px solid #232330', textAlign: 'center' }}>
-            <p style={{ color: '#8a8a9e', margin: '0 0 1rem 0' }}>No live matches currently available.</p>
-            <p style={{ color: '#fff', fontSize: '0.9rem', margin: 0 }}>Be the first to add money to your account and host a match above!</p>
+          <div style={{ background: '#16161e', padding: '3rem 1rem', borderRadius: '12px', border: '1px solid #232330', textAlign: 'center' }}>
+            <p style={{ color: '#8a8a9e', margin: '0 0 0.5rem 0' }}>No active matches right now.</p>
+            <p style={{ color: '#fff', fontSize: '0.9rem', margin: 0 }}>Ask Admin to send coins to your mobile number to host a match!</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
