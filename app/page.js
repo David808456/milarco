@@ -1,4 +1,24 @@
+'use client';
+
+import { useState } from 'react';
+
 export default function AuthPage() {
+  const [formData, setFormData] = useState({
+    username: '',
+    mobile: '',
+    password: ''
+  });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('User Registered:', formData);
+    alert(`Account created for ${formData.username}!`);
+  };
+
   return (
     <div style={{ backgroundColor: '#0d0d11', color: '#ffffff', fontFamily: 'sans-serif', minHeight: '100vh' }}>
       
@@ -28,27 +48,51 @@ export default function AuthPage() {
 
       {/* Form Container */}
       <main style={{ display: 'flex', justifyContent: 'center', padding: '2rem 1rem' }}>
-        <div style={{ background: '#16161e', border: '1px solid #232330', borderRadius: '12px', padding: '2rem', width: '100%', maxWidth: '400px' }}>
+        <form onSubmit={handleSubmit} style={{ background: '#16161e', border: '1px solid #232330', borderRadius: '12px', padding: '2rem', width: '100%', maxWidth: '400px' }}>
           
           <div style={{ marginBottom: '1.2rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: '#b3b3c6' }}>User Name *</label>
-            <input type="text" placeholder="Enter username" style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #232330', background: '#0d0d11', color: '#fff', boxSizing: 'border-box' }} />
+            <input 
+              type="text" 
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="Enter username" 
+              required
+              style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #232330', background: '#0d0d11', color: '#fff', boxSizing: 'border-box' }} 
+            />
           </div>
 
           <div style={{ marginBottom: '1.2rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: '#b3b3c6' }}>Mobile No *</label>
-            <input type="tel" placeholder="+977 98XXXXXXXX" style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #232330', background: '#0d0d11', color: '#fff', boxSizing: 'border-box' }} />
+            <input 
+              type="tel" 
+              name="mobile"
+              value={formData.mobile}
+              onChange={handleChange}
+              placeholder="+977 98XXXXXXXX" 
+              required
+              style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #232330', background: '#0d0d11', color: '#fff', boxSizing: 'border-box' }} 
+            />
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: '#b3b3c6' }}>Password *</label>
-            <input type="password" placeholder="••••••••" style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #232330', background: '#0d0d11', color: '#fff', boxSizing: 'border-box' }} />
+            <input 
+              type="password" 
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="••••••••" 
+              required
+              style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #232330', background: '#0d0d11', color: '#fff', boxSizing: 'border-box' }} 
+            />
           </div>
 
-          <button style={{ width: '100%', background: '#00ff88', color: '#000', border: 'none', padding: '0.75rem', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+          <button type="submit" style={{ width: '100%', background: '#00ff88', color: '#000', border: 'none', padding: '0.75rem', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
             Create Account
           </button>
-        </div>
+        </form>
       </main>
 
     </div>
