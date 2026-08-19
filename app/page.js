@@ -10,20 +10,20 @@ export default function RegisterPage() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError(''); // Clear error on typing
+    setError('');
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // 1. Mobile number validation (Must be exactly 10 digits)
+    // 1. Mobile number validation (10 digits)
     const mobileRegex = /^[0-9]{10}$/;
     if (!mobileRegex.test(formData.mobile)) {
       setError('Mobile number must be exactly 10 digits.');
       return;
     }
 
-    // 2. Password validation (Must be at least 8 characters)
+    // 2. Password validation (Min 8 characters)
     if (formData.password.length < 8) {
       setError('Password must be at least 8 characters long.');
       return;
@@ -39,11 +39,9 @@ export default function RegisterPage() {
       return;
     }
 
-    // Save user to array and save back to local storage
+    // Save user to array and update local storage
     existingUsers.push(formData);
     localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
-    
-    // Also save as current logged-in session user
     localStorage.setItem('user', JSON.stringify(formData));
 
     alert('Account created successfully!');
