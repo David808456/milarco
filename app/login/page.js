@@ -14,9 +14,18 @@ export default function LoginPage() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    const savedUser = JSON.parse(localStorage.getItem('user'));
+    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers')) || [];
+    
+    // Fallback to single user storage if array isn't populated yet
+    const singleUser = JSON.parse(localStorage.getItem('user'));
+    if (singleUser) registeredUsers.push(singleUser);
 
-    if (savedUser && savedUser.mobile === loginData.mobile && savedUser.password === loginData.password) {
+    const validUser = registeredUsers.find(
+      (u) => u.mobile === loginData.mobile && u.password === loginData.password
+    );
+
+    if (validUser) {
+      localStorage.setItem('user', JSON.stringify(validUser));
       router.push('/dashboard');
     } else {
       setError('Invalid mobile number or password!');
@@ -39,28 +48,12 @@ export default function LoginPage() {
           
           <div style={{ marginBottom: '1.2rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: '#b3b3c6' }}>Mobile No *</label>
-            <input 
-              type="tel" 
-              name="mobile" 
-              value={loginData.mobile} 
-              onChange={handleChange} 
-              placeholder="+977 98XXXXXXXX" 
-              required 
-              style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #232330', background: '#0d0d11', color: '#fff', boxSizing: 'border-box' }} 
-            />
+            <input type="tel" name="mobile" value={loginData.mobile} onChange={handleChange} placeholder="98XXXXXXXX" required style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #232330', background: '#0d0d11', color: '#fff', boxSizing: 'border-box' }} />
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: '#b3b3c6' }}>Password *</label>
-            <input 
-              type="password" 
-              name="password" 
-              value={loginData.password} 
-              onChange={handleChange} 
-              placeholder="••••••••" 
-              required 
-              style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #232330', background: '#0d0d11', color: '#fff', boxSizing: 'border-box' }} 
-            />
+            <input type="password" name="password" value={loginData.password} onChange={handleChange} placeholder="••••••••" required style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #232330', background: '#0d0d11', color: '#fff', boxSizing: 'border-box' }} />
           </div>
 
           <button type="submit" style={{ width: '100%', background: '#00ff88', color: '#000', border: 'none', padding: '0.75rem', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
